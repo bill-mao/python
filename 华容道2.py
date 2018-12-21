@@ -1,120 +1,122 @@
-'''
-raise SystemExit
-pawn相对空格的offset , code, offset, tag: 1, 2, 3 : 水平，垂直， 折线移动： 定义不同的界限保证不穿墙
-水平 & 折线这两种情况有可能“穿墙” 而过！！ 
-    水平： 移动不能到下一层
-        index //4 和 (index+offset) // 4 要保证相等
-    折线 -- 小兵： 
-        只需要考虑垂直相邻的两个空格的折线
-            上两个 ： pawn 要b//4 同一层
-            下两个 ： 要和 bb 同一层
-
-最好还是定义成为静态的
-
-'''
-upMovements = (
-    # pawn相对空格的offset , code, offset, tag: 1, 2, 3 : 水平，垂直， 折线移动： 定义不同的界限保证不穿墙
-    # 移曹操
-    (-2, 4, 1, 1),
-    (1, 4, -1, 1),
-    # 移竖将 2+2*2 = 6 左右，一步； 上下，一步两步
-    ( -1, 3, 1, 1),
-    ( 1, 3, -1, 1),
-
-    # ( -4, 3, 4, 2), # 没有执行过
-    # ( -4, 3, 8, 2), # 没有执行过
-    (-8, 3, 4, 2),
-    (-8, 3, 8, 2),
-
-    ( 8, 3, -4, 2),
-    ( 8, 3, -8, 2),
-    # 移横将 4 左右四个角
-    (-2 , 2, 1, 1),
-    ( 1, 2, -1, 1),
-    (2, 2, 1, 1),
-    ( 5, 2, -1, 1),
-    # 移小兵 4*2+ 2*2 = 12 左右，一步两步 (两个格子就是折线)； 上下， 一部两步
-    (-1, 1, 1, 1),
-    (3, 1, 1, 1),
-    (-1, 1, 5, 3),
-    (3, 1, -3, 3),
-
-    (1, 1, -1, 1),
-    (5, 1, -1, 1),
-    (1, 1, 3, 3),
-    (5, 1, -5, 3), # 没有执行过
-
-    # (-1, 1, 4),
-    # (-1, 1, 8),
-    (-4, 1, 4, 2),
-    (-4, 1, 8, 2),
-    (8, 1, -4, 2),
-    (8, 1, -8, 2)
-)
-
-# 左右相邻的空格
-leftMovements = (
-    # pawn相对空格的offset , code, offset , tag: 1, 2, 3 : 水平，垂直， 折线移动： 定义不同的界限保证不穿墙    
-    # 移曹操       2
-    # (-4  ,4,   4,),
-    (-8, 4, 4  ,2),
-    (4   ,4,   -4, 2),
-    # 移竖将       4
-    (-8  ,3,   4, 2),
-    (-7  ,3,   4, 2),
-    (4   ,3,   -4, 2),
-    (5   ,3,   -4, 2),
-    # 移横将       左右2*2 上下2 = 6
-    (-2 , 2,   1, 1),
-    (-2  ,2,   2, 1),
-    (2   ,2,   -1, 1),
-    (2   ,2,   -2, 1),
-    (-4  ,2,   4, 2),
-    (4   ,2,   -4, 2),
-    # 移小兵       左右2*2 上下4*2 = 12
-    (-1  ,1   ,1, 1),
-    (-1  ,1   ,2, 1),
-    (2   ,1   ,-1, 1),
-    (2   ,1   ,-2, 1),
-         
-    (-4  ,1   ,4, 2),
-    (-4  ,1   ,5, 3),
-    (-3  ,1   ,4, 2),
-    (-3  ,1   ,3, 3),
-
-    (4   ,1   ,-4, 2),
-    (4   ,1   ,-3, 3),
-    (5   ,1   ,-4, 2),
-    (5   ,1   ,-5, 3),
-)
-
-# 不相邻的格子
-# 兼容move 函数，，， thank GOD..
-isoMovements =(
-    # pawn相对空格的offset , code, offset  , tag: 1, 2, 3 : 水平，垂直， 折线移动： 定义不同的界限保证不穿墙   
-    # 移竖将       
-    (-8,  3,   4, 2),
-    (4,   3,   -4, 2),
-    # 移横将       
-    (-2,  2,   1, 1),
-    (1,   2,   -1, 1),
-    # 移小兵      
-
-)
 
 
-from collections import Counter 
-cover = Counter()
+# from collections import Counter 
+# cover = Counter()
 
-# 关键board的格式，在这个格式之下怎么move方便
-
-# 父亲board 指针int， queue 的index
 class Board:
+    
     '''保存华容道棋盘类
     '''
     # blankspace 暂时没有用！！ 这个参数暂时删除
     # prePawn 暂时删除
-    def __init__(self, pos, blankspace = (0,0), prePawn =-1, pre = -1 ):
+
+
+    # 静态变量：
+    '''
+    pawn 相对空格的offset , code, offset, tag: 1, 2, 3 : 水平，垂直， 折线移动： 定义不同的界限保证不穿墙
+    水平 & 折线这两种情况有可能“穿墙” 而过！！ 
+        水平： 移动不能到下一层
+            index //4 和 (index+offset) // 4 要保证相等
+        折线 -- 小兵： 
+            只需要考虑垂直相邻的两个空格的折线
+                上两个 ： pawn 要b//4 同一层
+                下两个 ： 要和 bb 同一层
+
+    最好还是定义成为静态的
+
+    '''
+    __upMovements = (
+        # pawn相对空格的offset , code, offset, tag: 1, 2, 3 : 水平，垂直， 折线移动： 定义不同的界限保证不穿墙
+        # 移曹操
+        (-2, 4, 1, 1),
+        (1, 4, -1, 1),
+        # 移竖将 2+2*2 = 6 左右，一步； 上下，一步两步
+        ( -1, 3, 1, 1),
+        ( 1, 3, -1, 1),
+
+        # ( -4, 3, 4, 2), # 没有执行过
+        # ( -4, 3, 8, 2), # 没有执行过
+        (-8, 3, 4, 2),
+        (-8, 3, 8, 2),
+
+        ( 8, 3, -4, 2),
+        ( 8, 3, -8, 2),
+        # 移横将 4 左右四个角
+        (-2 , 2, 1, 1),
+        ( 1, 2, -1, 1),
+        (2, 2, 1, 1),
+        ( 5, 2, -1, 1),
+        # 移小兵 4*2+ 2*2 = 12 左右，一步两步 (两个格子就是折线)； 上下， 一部两步
+        (-1, 1, 1, 1),
+        (3, 1, 1, 1),
+        (-1, 1, 5, 3),
+        (3, 1, -3, 3),
+
+        (1, 1, -1, 1),
+        (5, 1, -1, 1),
+        (1, 1, 3, 3),
+        (5, 1, -5, 3), # 没有执行过
+
+        # (-1, 1, 4),
+        # (-1, 1, 8),
+        (-4, 1, 4, 2),
+        (-4, 1, 8, 2),
+        (8, 1, -4, 2),
+        (8, 1, -8, 2)
+    )
+
+    # 左右相邻的空格
+    __leftMovements = (
+        # pawn相对空格的offset , code, offset , tag: 1, 2, 3 : 水平，垂直， 折线移动： 定义不同的界限保证不穿墙    
+        # 移曹操       2
+        # (-4  ,4,   4,),
+        (-8, 4, 4  ,2),
+        (4   ,4,   -4, 2),
+        # 移竖将       4
+        (-8  ,3,   4, 2),
+        (-7  ,3,   4, 2),
+        (4   ,3,   -4, 2),
+        (5   ,3,   -4, 2),
+        # 移横将       左右2*2 上下2 = 6
+        (-2 , 2,   1, 1),
+        (-2  ,2,   2, 1),
+        (2   ,2,   -1, 1),
+        (2   ,2,   -2, 1),
+        (-4  ,2,   4, 2),
+        (4   ,2,   -4, 2),
+        # 移小兵       左右2*2 上下4*2 = 12
+        (-1  ,1   ,1, 1),
+        (-1  ,1   ,2, 1),
+        (2   ,1   ,-1, 1),
+        (2   ,1   ,-2, 1),
+             
+        (-4  ,1   ,4, 2),
+        (-4  ,1   ,5, 3),
+        (-3  ,1   ,4, 2),
+        (-3  ,1   ,3, 3),
+
+        (4   ,1   ,-4, 2),
+        (4   ,1   ,-3, 3),
+        (5   ,1   ,-4, 2),
+        (5   ,1   ,-5, 3),
+    )
+
+    # 不相邻的格子
+    # 兼容move 函数，，， thank GOD..
+    __isoMovements =(
+        # pawn相对空格的offset , code, offset  , tag: 1, 2, 3 : 水平，垂直， 折线移动： 定义不同的界限保证不穿墙   
+        # 移竖将       
+        (-8,  3,   4, 2),
+        (4,   3,   -4, 2),
+        # 移横将       
+        (-2,  2,   1, 1),
+        (1,   2,   -1, 1),
+        # 移小兵      
+
+    )
+
+    heristic = [41, 34, 6, 0]
+    def __init__(self, pos, layer, blankspace = (0,0), prePawn =-1, pre = -1, father = -1 ):
         '''[summary]
         
         [description]
@@ -139,6 +141,7 @@ class Board:
         self.blankspace = [i for i,j in enumerate(pos) if j==0]
         self.prePawn = prePawn
         self.pre = pre
+        self.layer = layer
         assert len(self.blankspace) == 2
         if not self.checkBoard():
             print('Generate bad board')
@@ -146,6 +149,7 @@ class Board:
             raise Exception
         # assert self.checkBoard(), 'Generate bad board'
         # self.prePawn = prePawn
+        self.A = self.layer + Board.heristic [self.pos.index(4)//4 ]
 
     def gameover(self):
         # if 4 in self.pos[8:]:
@@ -259,9 +263,9 @@ class Board:
         if abs(bb- b) == 4:
             # 之后在把全局变量放在外面，节省空间
             # 必须测试一下！！ 头都晕了很容易出错
-            global upMovements
-            global cover
-            for i,m in enumerate(upMovements):
+            # global upMovements
+            # global cover
+            for i,m in enumerate(Board.__upMovements):
                 if -1< b+m[0]<20 and pos[b+m[0]] == m[1]:
                     flag = True
                     # 水平移动最复杂
@@ -280,20 +284,20 @@ class Board:
                         if m[0] in [3,5] and (b+m[0]) // 4 != bb//4 : flag = False
                     # 垂直运动不限制
                     if flag: 
-                        out.append(Board(move(b+m[0], m[2]), prePawn = b+m[0], pre = pos[b+m[0]]))
-                        cover[i] +=1
+                        out.append(Board(move(b+m[0], m[2]), prePawn = b+m[0], pre = pos[b+m[0]], layer = self.layer+1, father = self))
+                        # cover[i] +=1
                     # if m[0] == -4 and m[2] == 8: print('-=======================================-==--=-=-=')
        
         # 左右相连
         elif abs(bb-b) ==1 and bb//4==b//4:
-            global leftMovements
-            for i,m in enumerate(leftMovements):
+            # global leftMovements
+            for i,m in enumerate(Board.__leftMovements):
                 if -1< b+m[0]<20 and pos[b+m[0]] == m[1]:
                     # 水平移动保证在同一层   
                     # 空格和格子在同一水平线
                     if m[3] == 1 and  b//4 ==(b+m[0])//4  or m[3] !=1 :
-                        out.append(Board(move(b+m[0], m[2]), prePawn = b+m[0], pre = pos[b+m[0]]))
-                        cover[i+24] +=1
+                        out.append(Board(move(b+m[0], m[2]), prePawn = b+m[0], pre = pos[b+m[0]], layer = self.layer+1, father = self))
+                        # cover[i+24] +=1
 
   
 
@@ -313,11 +317,11 @@ class Board:
                 for sw in swap:
                     newpos = list(pos)
                     newpos[sw], newpos[bi] = newpos[bi], newpos[sw] 
-                    out.append(Board(pos = newpos, prePawn = sw, pre = pos[sw]))
+                    out.append(Board(pos = newpos, prePawn = sw, pre = pos[sw], layer = self.layer+1, father = self))
 
                 # 横将竖将
-                global isoMovements
-                for m in isoMovements:
+                # global isoMovements
+                for m in Board.__isoMovements:
                     # 不能随便复制粘贴哇。。
                     # if -1< b+m[0]<20 and pos[b+m[0]] == m[1]:
                     #     out.append(Board(move(b+m[0], m[2])))
@@ -331,7 +335,7 @@ class Board:
                         # 空格和横将, 只有横将水平移动 同一行
                         if m[3] == 1 and (bi)//4 != (bi+m[0]) //4 :
                             continue
-                        out.append(Board(move(bi+m[0], m[2]), prePawn = bi+m[0], pre = pos[bi+m[0]]))
+                        out.append(Board(move(bi+m[0], m[2]), prePawn = bi+m[0], pre = pos[bi+m[0]], layer = self.layer+1, father = self))
                
         return out
 
@@ -374,11 +378,20 @@ class Board:
             return False
         return True
 
+    def mirrorPos(self):
+        mir = []
+        for i in range(0, 17, 4):
+            mir.extend(self.pos[i: i+4][::-1])
+        # !! 非对称编码 4, 1 需要和左边的-1 交换
+        for i, m in enumerate(mir):
+            if m in [2, 4]:
+                mir[i], mir[i-1] = mir[i-1], mir[i]
+        # assert Board(mir).checkBoard
+        return tuple(mir)
+def generateBoard(i=0):
 
-def ramGenerate():
-
-    # 横刀立马 81
-    li = [
+    li= [ [
+    # 横刀立马 81 check
         3, 4, -1,  3, 
         -1, -1, -1,-1, 
         3, 2, -1, 3, 
@@ -387,129 +400,168 @@ def ramGenerate():
     ]
 
     # 水泄不通 79 check
-    li = [3, 4, -1, 1,
+    , [3, 4, -1, 1,
         -1, -1, -1, 1,
         2, -1, 2,-1,
         2, -1, 2, -1,
         1, 0, 0, 1]
-
-    # 过五关 34 check
-    li=[1, 4, -1, 1,
-        1, -1, -1, 1,
-        2, -1, 2, -1,
-        2, -1, 2, -1,
-        0, 2, -1, 0]
   
-    # 一路进军 58 又是多10步？？
-    li = [3, 4, -1, 1,
+    # 一路进军 58 check
+    , [3, 4, -1, 1,
     -1, -1, -1, 1,
     3, 3, 3, 1,
     -1, -1, -1, 1,
     0, 2, -1, 0]
-    # 峰回路转 138 no solution?? 
-    li = [1,1,1,3,
-        4,-1,3,-1,
-        -1,-1,-1,3,
-        0,2,-1,-1,
-        0,1,2,-1]
-
-    # whites= (17, 18)
-    # 峰回路转 138 no solution?? 
-    li = [1,1,1,3,
+ 
+    # 峰回路转 138  check
+    , [1,1,1,3,
         4,-1,3,-1,
         -1,-1,-1,3,
         0,2,-1,-1,
         0,1,2,-1]
     # 过五关 34 check
-    li=[1, 4, -1, 1,
+    ,[1, 4, -1, 1,
         1, -1, -1, 1,
         2, -1, 2, -1,
         2, -1, 2, -1,
         0, 2, -1, 0]
-
-    # 横刀立马 81
-    li = [
-        3, 4, -1,  3, 
-        -1, -1, -1,-1, 
-        3, 2, -1, 3, 
-        -1 , 1, 1, -1, 
-        1, 0, 0, 1, 
     ]
-    return Board(li )
+    # 横刀立马 81   水泄不通 79   一路进军 58   峰回路转 138   过五关 34   
+    return Board(li[i] , layer = 0)
 
+def printPre(previous, queue, ):
+    '''递归回溯到第一步， 打印走棋过程
+    Arguments:
+        previous {tuple} -- Board, father's index
+        queue {list} -- contains the tuple
+    
+    Returns:
+        int -- current step's count
+    '''
+    if previous[1] == -1:
+        # 初始状态， 还未移动
+        count = 0
+        print('this is the No.%d step' %count)
+        previous[0].printBoard()
+        return count
+    else:
+        count = printPre(queue[previous[1]], queue, ) +1
+        print('this is the No.%d step' %count)
+        previous[0].printBoard()
+        return count
 
-# encode int 
-def enc(board):
-
-    pass
-    # code
-    # return (code, father)
-
-# decode 棋盘
-def dec(code):
-
-    pass
-    # return board
-
-def exits(code):
-
-    # found before?
-    # exits a mirror?
-    return False
-
-if __name__ == '__main__':
-    # like (int, int father_point)
-    queue = []
-    iniBoard = ramGenerate()
+# mirror: bool; printed :bool; 
+# return time, search moves, 
+def solution(iniBoard , mirror = True, printed = False, heristic = True):
     # if iniBoard.gameover: !!!
     if iniBoard.gameover():
         print('already a solution, no need to move ')
         raise SystemExit
+    if heristic:
+        import bisect
+        iwait = [iniBoard.A]
+        openli = []
+        openli.append(iniBoard)
+        closeli = []
+
+        visited = set(tuple(iniBoard.pos))
+        if mirror: visited.add(iniBoard.mirrorPos())
+        import time 
+        st = time.time ()
+
+        while len(openli) > 0:
+            curBoard = openli.pop(0)
+            iwait.pop(0)
+            closeli.append(curBoard)
+
+            sonBoards = curBoard.nextMove()
+            for sBoard in sonBoards:
+                tp = tuple(sBoard.pos)
+                if tp not in visited :
+                    if mirror:
+                        mirr = sBoard.mirrorPos()
+                        if mirr in visited: continue
+                        else: visited.add(mirr)
+                    visited.add(tp)
+                    # 按照A值插入列表, 
+                    insert = bisect.bisect(iwait, sBoard.A)
+                    openli.insert(insert, sBoard)
+                    iwait.insert(insert, sBoard.A)
+
+                    if sBoard.gameover():
+                        # print('----%d' %sBoard.A)
+                        end = time.time ()
+                        # 打印运行结果
+                        if printed:
+                            def recur(board):
+                                if board.father == -1:
+                                    print('heristic search step %d' %board.layer)
+                                    board.printBoard()
+                                else:
+                                    recur(board.father)
+                                    print('heristic search step %d' %board.layer)
+                                    board.printBoard()
+                            recur(sBoard)
+                            print('heristic machine has tried %d moves' % (len(openli) + len(closeli) +1))
+                        # print(cover)
+                        return end -st, len(openli)+len(closeli)
+
+        print("gg, sorry to inform you that there's no solution")
+        print('machine has tried %d moves' % cur)
+        end = time.time ()
+        return(end-st, cur+1) 
+
+
+
+
+
+    # like (int, int father_point)
+    queue = []
     queue.append((iniBoard, -1))
     cur = 0
 
     visited = set(tuple(iniBoard.pos))
+    if mirror: visited.add(iniBoard.mirrorPos())
+    # print(iniBoard.pos, iniBoard.mirrorPos())
+
+    import time 
+    st = time.time ()
 
     # BFS search
     while cur<len(queue):
-    # while cur< 100000:
-        # print(cur)
         curBoard = queue[cur][0]
         # curBoard.printBoard()
         sonBoards = curBoard.nextMove()
-        for sb in sonBoards:
-            tp = tuple(sb.pos)
+        for sBoard in sonBoards:
+            tp = tuple(sBoard.pos)
             if tp not in visited :
+                if mirror:
+                    mirr = sBoard.mirrorPos()
+                    if mirr in visited: continue
+                    else: visited.add(mirr)
                 visited.add(tp)
-                queue.append((sb, cur))
-                if sb.gameover():
+                queue.append((sBoard, cur))
+                if sBoard.gameover():
+                    # print('----%d' %sBoard.A)
+                    end = time.time ()
                     # 打印运行结果
-                    # sb.printBoard()
-                    previous = queue[cur]
-                    count = -1
-                    def printPre(previous, ):
-                        # ？？why
-                        global count
-                        if previous[1] == -1:
-                            count += 1
-                            print('this is the No.%d step' %count)
-                            previous[0].printBoard()
-                            return previous[0]
-                        else:
-                            printPre(queue[previous[1]], )
-                            count += 1
-                            print('this is the No.%d step' %count)
-                            previous[0].printBoard()
-                    printPre(previous)
-                    print('this is the No.%d step' %(count+1))
-                    sb.printBoard()
-                    print('machine has tried %d moves' % (cur+1))
-                    print(cover)
-                    raise SystemExit
-
+                    if printed:
+                        previous = queue[-1]
+                        count = printPre(previous, queue, )
+                        print('machine has tried %d moves' % (cur+1))
+                    # print(cover)
+                    return end -st, cur+1
         cur+=1
 
     if cur == len(queue):
         print("gg, sorry to inform you that there's no solution")
         print('machine has tried %d moves' % cur)
+        end = time.time ()
+        return(end-st, cur+1)
 
+if __name__ == '__main__':
+    for i in range(5):
+        iniBoard = generateBoard(i)
+        # iniBoard = generateBoard(0)
+        print('heuristic mirror search cost %f seconds and %dmoves' %solution(iniBoard, True,))
+        print('heuristic search cost %f seconds and %dmoves' %solution(iniBoard, False))
