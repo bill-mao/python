@@ -1,0 +1,66 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+修改日志
+    2018-5-24：
+        普联除去测试数据：重跑
+
+
+    2018-5-14： er.csv 修改
+        1. 9个SQL语句 - 丹姐写错的SQL，群里的 -mr13 08 16 14? cr 08 09  因为00 啥的上下错位重复因为 多了一个 %
+        2. MR27的第1个item移到了虚结点 日元 0 重复太多
+        3.real estate和 convertible bond的外部结点把空格改为下划线
+
+    2018-5-13： er.csv
+        CR01 2信用评级 放入外部节点
+        MR09 3是否为沪深300 放入外部节点
+        MR10 9套期有效性 放入外部节点
+
+        改了MR19的外部结点属性改为 stock 股票
+
+        pending: 000 也要插入到数据库
+
+
+
+
+    2018-5-10： 计算节点118个全部加上。。finally ..
+        er.csv的修改： 版本有问题, 现在已经修改完全： 真的都是泪啊，没法rollback 
+            SQL改了4个： mr 13 24 28  CR03
+                丹姐的SQL：主要变化增加行次 -- er.csv 相应的外部节点。 修改有错误的SQL。AND AXIS_COUNT 这个  多了GROUP BY T.DIM_GID这个
+
+
+            debug：修改错误的SQL-- 刘方铮之前误改
+                cr19 多了一个%s 
+                mr18, 17 ,15 sql  --  没有%s 
+                **** cr03 找不到原因： er.csv 发生重大改变，没有重新修改template重建，所以找不到member
+
+    2018-5-9
+        debug：
+            MR18 er.csv 填入了 MR17 的SQL
+
+
+
+solved:
+    不在cross 里面，所以没有create S02的净资产
+    -a有行次：MR04，MR13，MR16，MR18，MR21，MR24，MR28，CR03，CR07
+    1 pending 创建了2个 CR17 - own_amount
+    2 shortestpath？？ 因为终点有好几个； 求得是确定两点的最短距离
