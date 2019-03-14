@@ -114,7 +114,7 @@ class Board:
                      横将 2
                      竖将 3 
                      曹操 4
-                         只编码左上角的，其余统一使用-1 或者任意数字, 按照顺序不会干扰？
+                         只编码左上角的，其余统一使用-1 
 
                  0  1  2  3 
                  4  5  6  7 
@@ -552,8 +552,8 @@ def solution(iniBoard , mirror = True, printed = False, heristic = True):
 if __name__ == '__main__':
     for i in range(5):
         iniBoard = generateBoard(i)
-        # iniBoard = generateBoard(0)
-        print('heuristic mirror search cost %f seconds and %dmoves' %solution(iniBoard, True, printed =True))
-        print('heuristic search cost %f seconds and %dmoves' %solution(iniBoard, False, printed =True))
-        # print('heuristic mirror search cost %f seconds and %dmoves' %solution(iniBoard, True,))
-        # print('heuristic search cost %f seconds and %dmoves' %solution(iniBoard, False))
+        # 把printed = True 就能够打印棋盘结果了
+        print('heuristic mirror search cost %f seconds and %dmoves' %solution(iniBoard , mirror = True, printed = False, heristic = True))
+        print('BFS mirror search cost %f seconds and %dmoves' %solution(iniBoard , mirror = True, printed = False, heristic = False))
+        print('heuristic search withous mirror detection cost %f seconds and %dmoves' %solution(iniBoard , mirror = False, printed = False, heristic = True))
+        print('BFS search withous mirror detection cost %f seconds and %dmoves' %solution(iniBoard , mirror = False, printed = False, heristic = False))
